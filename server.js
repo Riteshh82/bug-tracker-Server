@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 const connectDB = require('./config/db');
-const errorHandler = require('./middleware/errorHandler');
+const errorHandler = require("./middleware/errorHandler");
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -35,7 +35,7 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log(`🔌 Socket connected: ${socket.id}`);
   socket.on('join_room', (userId) => socket.join(userId));
-  socket.on('disconnect', () => console.log(`❌ Socket disconnected: ${socket.id}`));
+  socket.on('disconnect', () => console.log(`Socket disconnected: ${socket.id}`));
 });
 
 // Middleware
@@ -83,4 +83,4 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Dat
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
