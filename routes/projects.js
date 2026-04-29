@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
-const { getProjects, createProject, getProject, updateProject, deleteProject, addMember } = require('../controllers/projectController');
+const { getProjects, createProject, getProject, updateProject, deleteProject, addMember, removeMember } = require('../controllers/projectController');
 const { getModules, createModule, updateModule, deleteModule } = require('../controllers/moduleController');
 
 router.use(protect);
@@ -9,6 +9,7 @@ router.use(protect);
 router.route('/').get(getProjects).post(createProject);
 router.route('/:id').get(getProject).put(updateProject).delete(deleteProject);
 router.post('/:id/members', addMember);
+router.delete('/:id/members/:userId', removeMember);
 
 // Modules nested under project
 router.get('/:projectId/modules', getModules);

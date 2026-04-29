@@ -3,7 +3,6 @@ const ActivityLog = require("../models/Activitylog.js");
 const Notification = require("../models/Notification");
 const Bug = require("../models/Bug");
 
-// @GET /api/bugs/:bugId/comments
 const getComments = async (req, res, next) => {
   try {
     const comments = await Comment.find({ bug: req.params.bugId })
@@ -15,8 +14,6 @@ const getComments = async (req, res, next) => {
     next(err);
   }
 };
-
-// @POST /api/bugs/:bugId/comments
 const addComment = async (req, res, next) => {
   try {
     const { content, mentions } = req.body;
@@ -35,7 +32,6 @@ const addComment = async (req, res, next) => {
       metadata: { bugId: req.params.bugId },
     });
 
-    // Notify mentions
     if (mentions && mentions.length) {
       const bug = await Bug.findById(req.params.bugId);
       for (const userId of mentions) {
@@ -60,8 +56,6 @@ const addComment = async (req, res, next) => {
     next(err);
   }
 };
-
-// @PUT /api/comments/:id
 const updateComment = async (req, res, next) => {
   try {
     const comment = await Comment.findOneAndUpdate(
@@ -78,8 +72,6 @@ const updateComment = async (req, res, next) => {
     next(err);
   }
 };
-
-// @DELETE /api/comments/:id
 const deleteComment = async (req, res, next) => {
   try {
     await Comment.findOneAndDelete({

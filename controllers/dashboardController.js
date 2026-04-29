@@ -3,12 +3,9 @@ const User = require("../models/User");
 const ActivityLog = require("../models/Activitylog.js");
 const mongoose = require("mongoose");
 
-// @GET /api/dashboard/analytics
 const getAnalytics = async (req, res, next) => {
   try {
     const { project } = req.query;
-
-    // Build base match — convert project string to ObjectId if provided
     const baseMatch = { isDeleted: false };
     if (project && mongoose.Types.ObjectId.isValid(project)) {
       baseMatch.project = new mongoose.Types.ObjectId(project);
@@ -46,8 +43,6 @@ const getAnalytics = async (req, res, next) => {
         { $group: { _id: "$type", count: { $sum: 1 } } },
       ]),
     ]);
-
-    // Bugs over time (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const bugsOverTime = await Bug.aggregate([
       { $match: { ...baseMatch, createdAt: { $gte: thirtyDaysAgo } } },
@@ -59,8 +54,6 @@ const getAnalytics = async (req, res, next) => {
       },
       { $sort: { _id: 1 } },
     ]);
-
-    // Top reporters (QA productivity)
     const topReporters = await Bug.aggregate([
       { $match: baseMatch },
       { $group: { _id: "$createdBy", count: { $sum: 1 } } },

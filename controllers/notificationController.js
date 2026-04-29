@@ -1,6 +1,5 @@
 const Notification = require('../models/Notification');
 
-// @GET /api/notifications
 const getNotifications = async (req, res, next) => {
   try {
     const notifications = await Notification.find({ recipient: req.user._id })
@@ -12,7 +11,6 @@ const getNotifications = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// @PUT /api/notifications/read-all
 const markAllRead = async (req, res, next) => {
   try {
     await Notification.updateMany({ recipient: req.user._id, isRead: false }, { isRead: true });
@@ -20,7 +18,6 @@ const markAllRead = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// @PUT /api/notifications/:id/read
 const markRead = async (req, res, next) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { isRead: true });

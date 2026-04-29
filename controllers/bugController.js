@@ -2,7 +2,6 @@ const Bug = require("../models/Bug");
 const ActivityLog = require("../models/Activitylog.js");
 const Notification = require("../models/Notification");
 
-// @GET /api/bugs
 const getBugs = async (req, res, next) => {
   try {
     const {
@@ -51,7 +50,6 @@ const getBugs = async (req, res, next) => {
   }
 };
 
-// @POST /api/bugs
 const createBug = async (req, res, next) => {
   try {
     const screenshots = req.files
@@ -61,7 +59,6 @@ const createBug = async (req, res, next) => {
         }))
       : [];
 
-    // Parse tags: accept comma-separated string OR array
     let tags = req.body.tags;
     if (typeof tags === "string")
       tags = tags
@@ -85,7 +82,6 @@ const createBug = async (req, res, next) => {
       metadata: { bugId: bug.bugId, title: bug.title },
     });
 
-    // Notify assigned user
     if (
       bug.assignedTo &&
       bug.assignedTo.toString() !== req.user._id.toString()
@@ -111,7 +107,6 @@ const createBug = async (req, res, next) => {
   }
 };
 
-// @GET /api/bugs/:id
 const getBug = async (req, res, next) => {
   try {
     const bug = await Bug.findById(req.params.id)
@@ -129,14 +124,12 @@ const getBug = async (req, res, next) => {
   }
 };
 
-// @PUT /api/bugs/:id
 const updateBug = async (req, res, next) => {
   try {
     const bug = await Bug.findById(req.params.id);
     if (!bug)
       return res.status(404).json({ success: false, message: "Bug not found" });
 
-    // Parse tags if provided as string
     if (req.body.tags && typeof req.body.tags === "string") {
       req.body.tags = req.body.tags
         .split(",")
@@ -144,7 +137,6 @@ const updateBug = async (req, res, next) => {
         .filter(Boolean);
     }
 
-    // Track changes for history
     const trackedFields = ["status", "priority", "assignedTo", "title", "type"];
     const historyEntries = [];
     trackedFields.forEach((field) => {
@@ -161,7 +153,6 @@ const updateBug = async (req, res, next) => {
       }
     });
 
-    // Capture values before overwriting for notification
     const previousStatus = bug.status;
     const createdById = bug.createdBy?.toString();
 
@@ -169,7 +160,6 @@ const updateBug = async (req, res, next) => {
     if (historyEntries.length) bug.history.push(...historyEntries);
     await bug.save();
 
-    // Log activity
     const changedFields = historyEntries.map((h) => h.field).join(", ");
     if (changedFields) {
       await ActivityLog.create({
@@ -181,7 +171,6 @@ const updateBug = async (req, res, next) => {
       });
     }
 
-    // Notify creator on status change (not if they did it themselves)
     if (
       req.body.status &&
       req.body.status !== previousStatus &&
@@ -207,7 +196,6 @@ const updateBug = async (req, res, next) => {
   }
 };
 
-// @DELETE /api/bugs/:id (soft delete)
 const deleteBug = async (req, res, next) => {
   try {
     await Bug.findByIdAndUpdate(req.params.id, {
@@ -220,7 +208,6 @@ const deleteBug = async (req, res, next) => {
   }
 };
 
-// @PUT /api/bugs/:id/restore
 const restoreBug = async (req, res, next) => {
   try {
     await Bug.findByIdAndUpdate(req.params.id, {
@@ -233,7 +220,6 @@ const restoreBug = async (req, res, next) => {
   }
 };
 
-// @GET /api/bugs/:id/activity
 const getBugActivity = async (req, res, next) => {
   try {
     const activity = await ActivityLog.find({ entityId: req.params.id })

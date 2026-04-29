@@ -8,7 +8,6 @@ const generateToken = (id) => {
   return jwt.sign({ id }, secret, { expiresIn: process.env.JWT_EXPIRE || '7d' });
 };
 
-// @POST /api/auth/register
 const register = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -24,7 +23,6 @@ const register = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// @POST /api/auth/login
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -36,13 +34,9 @@ const login = async (req, res, next) => {
     res.json({ success: true, token: generateToken(user._id), user: user.toJSON() });
   } catch (err) { next(err); }
 };
-
-// @GET /api/auth/me
 const getMe = async (req, res) => {
   res.json({ success: true, user: req.user });
 };
-
-// @PUT /api/auth/profile
 const updateProfile = async (req, res, next) => {
   try {
     const { name, avatar } = req.body;

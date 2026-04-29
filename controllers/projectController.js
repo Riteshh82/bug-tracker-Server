@@ -1,7 +1,6 @@
 const Project = require("../models/Project");
 const ActivityLog = require("../models/Activitylog.js");
 
-// @GET /api/projects
 const getProjects = async (req, res, next) => {
   try {
     const projects = await Project.find({
@@ -16,7 +15,6 @@ const getProjects = async (req, res, next) => {
   }
 };
 
-// @POST /api/projects
 const createProject = async (req, res, next) => {
   try {
     const { name, description, members } = req.body;
@@ -38,7 +36,6 @@ const createProject = async (req, res, next) => {
   }
 };
 
-// @GET /api/projects/:id
 const getProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
@@ -54,7 +51,6 @@ const getProject = async (req, res, next) => {
   }
 };
 
-// @PUT /api/projects/:id
 const updateProject = async (req, res, next) => {
   try {
     const project = await Project.findByIdAndUpdate(req.params.id, req.body, {
@@ -71,7 +67,6 @@ const updateProject = async (req, res, next) => {
   }
 };
 
-// @DELETE /api/projects/:id
 const deleteProject = async (req, res, next) => {
   try {
     await Project.findByIdAndUpdate(req.params.id, { isDeleted: true });
@@ -81,7 +76,6 @@ const deleteProject = async (req, res, next) => {
   }
 };
 
-// @POST /api/projects/:id/members
 const addMember = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -99,6 +93,22 @@ const addMember = async (req, res, next) => {
   }
 };
 
+const removeMember = async (req, res, next) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Only the project owner can remove members' });
+    }
+    project.members = project.members.filter(m => m.toString() !== req.params.userId);
+    await project.save();
+    const updated = await Project.findById(project._id)
+      .populate('owner', 'name email avatar')
+      .populate('members', 'name email avatar');
+    res.json({ success: true, project: updated });
+  } catch (err) { next(err); }
+};
+
 module.exports = {
   getProjects,
   createProject,
@@ -106,4 +116,6 @@ module.exports = {
   updateProject,
   deleteProject,
   addMember,
+  removeMember,
 };
+
