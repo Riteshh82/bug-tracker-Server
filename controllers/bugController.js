@@ -6,26 +6,53 @@ const getBugs = async (req, res, next) => {
   try {
     const {
       project,
+      module,
+      feature,
       priority,
       status,
+      type,
       assignedTo,
       search,
+      tags,
+      sortBy = "createdAt",
+      sortDir = "desc",
       page = 1,
-      limit = 20,
+      limit = 200,
       isDeleted,
     } = req.query;
+
     const query = { isDeleted: isDeleted === "true" };
 
     if (project) query.project = project;
-    if (priority) query.priority = priority;
-    if (status) query.status = status;
+    if (module) query.module = module;
+    if (feature) query.feature = feature;
+    if (priority) {
+      const priorities = priority.split(",").map((p) => p.trim()).filter(Boolean);
+      query.priority = priorities.length === 1 ? priorities[0] : { $in: priorities };
+    }
+    if (status) {
+      const statuses = status.split(",").map((s) => s.trim()).filter(Boolean);
+      query.status = statuses.length === 1 ? statuses[0] : { $in: statuses };
+    }
+    if (type) {
+      const types = type.split(",").map((t) => t.trim()).filter(Boolean);
+      query.type = types.length === 1 ? types[0] : { $in: types };
+    }
     if (assignedTo) query.assignedTo = assignedTo;
+    if (tags) {
+      const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
+      if (tagList.length) query.tags = { $in: tagList };
+    }
     if (search)
       query.$or = [
         { title: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
         { bugId: { $regex: search, $options: "i" } },
       ];
+
+    const allowedSortFields = ["createdAt", "priority", "status", "title", "type", "updatedAt"];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : "createdAt";
+    const sortOrder = sortDir === "asc" ? 1 : -1;
 
     const total = await Bug.countDocuments(query);
     const bugs = await Bug.find(query)
@@ -34,7 +61,7 @@ const getBugs = async (req, res, next) => {
       .populate("project", "name")
       .populate("module", "name")
       .populate("feature", "name")
-      .sort({ createdAt: -1 })
+      .sort({ [sortField]: sortOrder })
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
@@ -99,7 +126,9 @@ const createBug = async (req, res, next) => {
     const populated = await Bug.findById(bug._id)
       .populate("assignedTo", "name email avatar")
       .populate("createdBy", "name email avatar")
-      .populate("project", "name");
+      .populate("project", "name")
+      .populate("module", "name")
+      .populate("feature", "name");
 
     res.status(201).json({ success: true, bug: populated });
   } catch (err) {

@@ -1,5 +1,5 @@
 const Comment = require("../models/Comment");
-const ActivityLog = require("../models/Activitylog.js");
+const ActivityLog = require('../models/Activitylog.js');
 const Notification = require("../models/Notification");
 const Bug = require("../models/Bug");
 

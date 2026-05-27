@@ -1,4 +1,7 @@
 const Project = require("../models/Project");
+const Module = require("../models/Module");
+const Feature = require("../models/Feature");
+const Bug = require("../models/Bug");
 const ActivityLog = require("../models/Activitylog.js");
 
 const getProjects = async (req, res, next) => {
@@ -69,8 +72,16 @@ const updateProject = async (req, res, next) => {
 
 const deleteProject = async (req, res, next) => {
   try {
-    await Project.findByIdAndUpdate(req.params.id, { isDeleted: true });
-    res.json({ success: true, message: "Project deleted" });
+    const projectId = req.params.id;
+    // Cascade: soft-delete all bugs in this project
+    await Bug.updateMany({ project: projectId }, { isDeleted: true, deletedAt: new Date() });
+    // Cascade: soft-delete all features in this project
+    await Feature.updateMany({ project: projectId }, { isDeleted: true });
+    // Cascade: soft-delete all modules in this project
+    await Module.updateMany({ project: projectId }, { isDeleted: true });
+    // Soft-delete the project itself
+    await Project.findByIdAndUpdate(projectId, { isDeleted: true });
+    res.json({ success: true, message: "Project and all its contents deleted" });
   } catch (err) {
     next(err);
   }
@@ -118,4 +129,3 @@ module.exports = {
   addMember,
   removeMember,
 };
-

@@ -1,5 +1,6 @@
 const Module = require('../models/Module');
 const Feature = require('../models/Feature');
+const Bug = require('../models/Bug');
 
 // Modules
 const getModules = async (req, res, next) => {
@@ -25,8 +26,14 @@ const updateModule = async (req, res, next) => {
 
 const deleteModule = async (req, res, next) => {
   try {
-    await Module.findByIdAndUpdate(req.params.id, { isDeleted: true });
-    res.json({ success: true, message: 'Module deleted' });
+    const moduleId = req.params.id;
+    // Soft-delete all features in this module
+    await Feature.updateMany({ module: moduleId }, { isDeleted: true });
+    // Soft-delete all bugs in this module
+    await Bug.updateMany({ module: moduleId }, { isDeleted: true, deletedAt: new Date() });
+    // Soft-delete the module itself
+    await Module.findByIdAndUpdate(moduleId, { isDeleted: true });
+    res.json({ success: true, message: 'Module and all its contents deleted' });
   } catch (err) { next(err); }
 };
 
@@ -55,8 +62,12 @@ const updateFeature = async (req, res, next) => {
 
 const deleteFeature = async (req, res, next) => {
   try {
-    await Feature.findByIdAndUpdate(req.params.id, { isDeleted: true });
-    res.json({ success: true, message: 'Feature deleted' });
+    const featureId = req.params.id;
+    // Soft-delete all bugs in this feature
+    await Bug.updateMany({ feature: featureId }, { isDeleted: true, deletedAt: new Date() });
+    // Soft-delete the feature itself
+    await Feature.findByIdAndUpdate(featureId, { isDeleted: true });
+    res.json({ success: true, message: 'Feature and all its bugs deleted' });
   } catch (err) { next(err); }
 };
 

@@ -1,15 +1,36 @@
 const Bug = require("../models/Bug");
 const User = require("../models/User");
+const Project = require("../models/Project");
 const ActivityLog = require("../models/Activitylog.js");
 const mongoose = require("mongoose");
 
 const getAnalytics = async (req, res, next) => {
   try {
-    const { project } = req.query;
-    const baseMatch = { isDeleted: false };
+    const { project, module, feature } = req.query;
+
+    // Scope to projects the current user owns or is a member of
+    const userProjects = await Project.find({
+      $or: [{ owner: req.user._id }, { members: req.user._id }],
+      isDeleted: false,
+    }).select("_id");
+    const userProjectIds = userProjects.map((p) => p._id);
+
+    const baseMatch = {
+      isDeleted: false,
+      project: { $in: userProjectIds },
+    };
+
+    // Optional narrower filters
     if (project && mongoose.Types.ObjectId.isValid(project)) {
       baseMatch.project = new mongoose.Types.ObjectId(project);
     }
+    if (module && mongoose.Types.ObjectId.isValid(module)) {
+      baseMatch.module = new mongoose.Types.ObjectId(module);
+    }
+    if (feature && mongoose.Types.ObjectId.isValid(feature)) {
+      baseMatch.feature = new mongoose.Types.ObjectId(feature);
+    }
+
 
     const [
       totalBugs,
